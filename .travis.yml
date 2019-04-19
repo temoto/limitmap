@@ -1,0 +1,13 @@
+sudo: false
+cache:
+  go: true
+language: go
+go:
+  - "1.11"
+  - "1.12"
+  - "master"
+env:
+  - GO111MODULE=on
+
+script: go test -bench=. -covermode=atomic -coverprofile=coverage.txt -race -v -vet ''
+after_success: bash <(curl -s https://codecov.io/bash)

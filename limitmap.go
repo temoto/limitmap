@@ -12,7 +12,6 @@
 // for url := range urlChan {
 // 	go process(url, rch)
 // }
-
 package limitmap
 
 import (
@@ -51,7 +50,6 @@ func (s *Semaphore) Acquire() uint {
 		}
 		s.wait.Wait()
 	}
-	panic("Unexpected branch")
 }
 
 func (s *Semaphore) Release() (result uint) {

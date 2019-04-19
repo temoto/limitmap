@@ -5,7 +5,7 @@ import (
 )
 
 func TestLimitMapRandom(t *testing.T) {
-	const N = 10000
+	const N = 4000 // race: limit on 8128 simultaneously alive goroutines
 	wait := make(chan bool)
 	m := NewLimitMap()
 	for i := 0; i < N; i++ {
