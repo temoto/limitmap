@@ -1,13 +1,26 @@
 sudo: false
 cache:
   go: true
+  directories:
+    - $HOME/.cache
+    - $HOME/gopath/pkg/mod
 language: go
 go:
   - "1.11"
   - "1.12"
-  - "master"
+  - 1.x
 env:
   - GO111MODULE=on
 
-script: go test -bench=. -covermode=atomic -coverprofile=coverage.txt -race -v -vet ''
+install:
+#  - test -x $HOME/bin/staticcheck || ( curl -L -o $HOME/bin/staticcheck 'https://github.com/dominikh/go-tools/releases/download/2019.1.1/staticcheck_linux_amd64' && chmod +x $HOME/bin/staticcheck )
+  - go get github.com/dominikh/go-tools/cmd/staticcheck
+
+script:
+  - go fmt ./...
+  - go mod tidy && git diff --exit-code
+  - staticcheck ./...
+  - go test -v -mod=vendor -bench=. -covermode=atomic -coverprofile=coverage.txt -race -vet=''
+before_cache: rm -f $HOME/.cache/go-build/log.txt
+
 after_success: bash <(curl -s https://codecov.io/bash)

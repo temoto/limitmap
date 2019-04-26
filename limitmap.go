@@ -34,6 +34,9 @@ type Semaphore struct {
 }
 
 func NewSemaphore(max uint) *Semaphore {
+	if max == 0 {
+		panic("Semaphore with max=0 can never be acquired")
+	}
 	return &Semaphore{
 		max:  max,
 		wait: sync.Cond{L: new(sync.Mutex)},
@@ -43,7 +46,7 @@ func NewSemaphore(max uint) *Semaphore {
 func (s *Semaphore) Acquire() uint {
 	s.wait.L.Lock()
 	defer s.wait.L.Unlock()
-	for i := 0; ; i++ {
+	for {
 		if uint(s.value)+1 <= s.max {
 			s.value++
 			return s.value
@@ -55,10 +58,10 @@ func (s *Semaphore) Acquire() uint {
 func (s *Semaphore) Release() (result uint) {
 	s.wait.L.Lock()
 	defer s.wait.L.Unlock()
-	s.value--
-	if s.value < 0 {
+	if s.value == 0 {
 		panic("Semaphore Release without Acquire")
 	}
+	s.value--
 	s.wait.Signal()
 	return
 }
@@ -86,8 +89,8 @@ func (m *LimitMap) Acquire(key string, max uint) {
 	m.lk.Unlock()
 
 	m.wg.Add(1)
-	if x := l.Acquire(); x < 0 || x > l.max {
-		panic("oia")
+	if x := l.Acquire(); x > l.max {
+		panic("Semaphore Acquire overflow")
 	}
 }
 
@@ -106,8 +109,8 @@ func (m *LimitMap) Release(key string) {
 	}
 	m.lk.Unlock()
 
-	if x := l.Release(); x < 0 || x > l.max {
-		panic("oir")
+	if x := l.Release(); x > l.max {
+		panic("Semaphore Release overflow")
 	}
 	m.wg.Done()
 }
